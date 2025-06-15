@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OTA Update</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <button class="update-btn" onclick="window.location.href='/'" style="margin-bottom: 24px;">
+            &#8962; Home
+        </button>
+        <div class="card upload-box" style="margin-bottom: 40px;">
+            <h2>Firmware Update</h2>
+            <form id="upload_form" method="POST" enctype="multipart/form-data">
+                <input type="file" name="update" required><br>
+                <button type="submit" class="update-btn">Upload Firmware</button>
+            </form>
+            <div id="fw-progress-container" style="display:none;">
+                <div id="fw-progress-status" style="margin-bottom:4px;">Uploading...</div>
+                <progress id="fw-progress" value="0" max="100" style="width:100%;"></progress>
+            </div>
+            <div id="result"></div>
+        </div>
+        <div class="card upload-box" style="margin-bottom: 80px;">
+            <h2>Frontend (SPIFFS) Update</h2>
+            <form id="spiffs_form" method="POST" enctype="multipart/form-data">
+                <input type="file" name="spiffs" required><br>
+                <button type="submit" class="update-btn">Upload SPIFFS</button>
+            </form>
+            <div id="spiffs-progress-container" style="display:none;">
+                <div id="spiffs-progress-status" style="margin-bottom:4px;">Uploading...</div>
+                <progress id="spiffs-progress" value="0" max="100" style="width:100%;"></progress>
+            </div>
+            <div id="spiffs-result"></div>
+        </div>
+        <a href="https://www.edcom.mk" target="_blank" class="company-logo">
+            <img src="logo.png" alt="eDCom" style="height:40px; margin:16px 0;">
+        </a>
+    </div>
+    <script>
+        // Firmware OTA
+        document.getElementById('upload_form').onsubmit = function(e){
+            e.preventDefault();
+            var form = e.target;
+            var data = new FormData(form);
+            var xhr = new XMLHttpRequest();
+            var progressContainer = document.getElementById('fw-progress-container');
+            var progressBar = document.getElementById('fw-progress');
+            var progressStatus = document.getElementById('fw-progress-status');
+            progressContainer.style.display = 'block';
+            progressBar.value = 0;
+            progressStatus.textContent = "Uploading...";
+
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    var percent = Math.round((event.loaded / event.total) * 100);
+                    progressBar.value = percent;
+                    progressStatus.textContent = "Uploading... " + percent + "%";
+                }
+            };
+            xhr.onload = function () {
+                progressStatus.textContent = xhr.responseText === "OK" ? "Firmware update successful! Rebooting..." : "Firmware update failed!";
+                setTimeout(() => { progressContainer.style.display = 'none'; }, 5000);
+            };
+            xhr.onerror = function () {
+                progressStatus.textContent = "Upload error!";
+                setTimeout(() => { progressContainer.style.display = 'none'; }, 5000);
+            };
+            xhr.open("POST", "/update", true);
+            xhr.send(data);
+        };
+
+        // SPIFFS OTA
+        document.getElementById('spiffs_form').onsubmit = function(e){
+            e.preventDefault();
+            var form = e.target;
+            var data = new FormData(form);
+            var xhr = new XMLHttpRequest();
+            var progressContainer = document.getElementById('spiffs-progress-container');
+            var progressBar = document.getElementById('spiffs-progress');
+            var progressStatus = document.getElementById('spiffs-progress-status');
+            progressContainer.style.display = 'block';
+            progressBar.value = 0;
+            progressStatus.textContent = "Uploading...";
+
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    var percent = Math.round((event.loaded / event.total) * 100);
+                    progressBar.value = percent;
+                    progressStatus.textContent = "Uploading... " + percent + "%";
+                }
+            };
+            xhr.onload = function () {
+                progressStatus.textContent = xhr.responseText === "OK" ? "SPIFFS update successful! Rebooting..." : "SPIFFS update failed!";
+                setTimeout(() => { progressContainer.style.display = 'none'; }, 5000);
+            };
+            xhr.onerror = function () {
+                progressStatus.textContent = "Upload error!";
+                setTimeout(() => { progressContainer.style.display = 'none'; }, 5000);
+            };
+            xhr.open("POST", "/spiffs_update", true);
+            xhr.send(data);
+        };
+    </script>
+</body>
+</html>
